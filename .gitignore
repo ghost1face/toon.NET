@@ -1,0 +1,20 @@
+# ignore user specific files
+*.user
+*.suo
+
+# cache/configuration directories
+.vs
+
+# ignore build files
+[Bb]in/
+[Dd]ebug/
+[Oo]bj/
+[Rr]elease/
+
+# test results/ code coverage
+coverage.*.xml
+[Cc]overage-[Rr]eport/
+[Tt]est-[Rr]esults/
+
+# nuget configuration
+[Nn]u[Gg]et.config
