@@ -1,0 +1,5 @@
+﻿Items[1]:
+  - Users[2]{Id,Name}:
+    1,Ada
+    2,Bob
+    Status: active

@@ -1,0 +1,5 @@
+﻿User:
+  Id: 123
+  Name: Ada
+  Role: null
+  Active: null

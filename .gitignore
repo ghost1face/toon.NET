@@ -18,3 +18,7 @@ coverage.*.xml
 
 # nuget configuration
 [Nn]u[Gg]et.config
+
+# Verify
+*.received.*
+*.received/
