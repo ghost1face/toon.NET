@@ -9,13 +9,32 @@ namespace Toon
     /// <summary>
     /// Provides functionality to serialize objects or value types to TOON (Token-Oriented Object Notation) format.
     /// </summary>
-    public class ToonSerializer
+    public partial class ToonSerializer
     {
         private readonly ToonSerializerSettings toonSerializerSettings;
+#if NET8_0_OR_GREATER
+        private static readonly Regex isNumericRegex = IsNumericRegex();
+        private static readonly Regex containsBracketsOrBraces = ContainsBracketsOrBracesRegex();
+        private static readonly Regex containsControlCharacters = ContainsControlCharsRegex();
+        private static readonly Regex isValidUnquotedKeyRegex = IsValidUnquotedKeyRegex();
+
+        [GeneratedRegex("^-?\\d+(\\.\\d+)?$")]
+        private static partial Regex IsNumericRegex();
+
+        [GeneratedRegex("[[\\]{}]")]
+        private static partial Regex ContainsBracketsOrBracesRegex();
+
+        [GeneratedRegex("[\\n\\r\\t]")]
+        private static partial Regex ContainsControlCharsRegex();
+
+        [GeneratedRegex("^[A-Z_][\\w.]*$", RegexOptions.IgnoreCase, "en-US")]
+        private static partial Regex IsValidUnquotedKeyRegex();
+#else
         private static readonly Regex isNumericRegex = new Regex("^-?\\d+(\\.\\d+)?$");
         private static readonly Regex containsBracketsOrBraces = new Regex("[[\\]{}]");
         private static readonly Regex containsControlCharacters = new Regex("[\\n\\r\\t]");
         private static readonly Regex isValidUnquotedKeyRegex = new Regex("^[A-Z_][\\w.]*$", RegexOptions.IgnoreCase);
+#endif
 
         /// <summary>
         /// Initializes a new instance of <see cref="ToonSerializer"/> with default serialization settings.
