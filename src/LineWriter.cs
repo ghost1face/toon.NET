@@ -37,6 +37,11 @@ namespace Toon
             return builder.ToString();
         }
 
+        public void Flush()
+        {
+            // no-op for this implementation
+        }
+
         private static string Repeat(string text, int count)
         {
             var output = "";

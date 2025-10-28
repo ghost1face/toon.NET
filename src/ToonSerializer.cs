@@ -274,7 +274,7 @@ namespace Toon
                 case null:
                     return Constants.NullLiteral;
                 case bool boolValue:
-                    return boolValue ? bool.TrueString : bool.FalseString;
+                    return boolValue ? Constants.TrueLilteral : Constants.FalseLilteral;
                 default:
                     {
                         var val = value.ToString();

@@ -55,7 +55,7 @@ namespace Toon
             return false;
         }
 
-        public static bool IsArrayOfPrimitives(IEnumerable<object> objects)
+        public static bool IsArrayOfPrimitives(IEnumerable<object?> objects)
         {
             return objects.All(IsJsonPrimitive);
         }
