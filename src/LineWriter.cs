@@ -18,18 +18,26 @@ namespace Toon
         {
             var indent = Repeat(indentationString, depth);
 
+            if (builder.Length > 0)
+            {
+                builder.Append(Constants.NewLine);
+            }
+
             builder.Append(indent)
-                .Append(content)
-                .Append(Constants.NewLine);
+                .Append(content);
         }
 
         public void Push(char content, int depth)
         {
             var indent = Repeat(indentationString, depth);
 
+            if (builder.Length > 0)
+            {
+                builder.Append(Constants.NewLine);
+            }
+
             builder.Append(indent)
-                .Append(content)
-                .Append(Constants.NewLine);
+                .Append(content);
         }
 
         public override string ToString()

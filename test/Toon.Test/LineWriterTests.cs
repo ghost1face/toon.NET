@@ -14,7 +14,7 @@ namespace Toon.Test
 
             var result = writer.ToString().Split('\n');
 
-            Assert.Equal(3, result.Length); // empty newline suffix accounts for 3 lines
+            Assert.Equal(2, result.Length);
             Assert.Contains("line1", result[0]);
             Assert.Contains("x", result[1]);
         }
@@ -30,7 +30,7 @@ namespace Toon.Test
 
             var output = writer.ToString().Split('\n');
 
-            Assert.Equal(3, output.Length); // empty newline suffix accounts for 3 lines
+            Assert.Equal(2, output.Length);
             Assert.Contains(string.Join("", Enumerable.Repeat(" ", indentationSize * 1)), output[0]);
             Assert.Contains(string.Join("", Enumerable.Repeat(" ", indentationSize * 5)), output[1]);
         }
