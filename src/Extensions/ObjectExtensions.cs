@@ -21,11 +21,11 @@ namespace Toon.Extensions
                     || value is decimal;
         }
 
-        public static PropertyData[] GetSerializableProperties(this object obj)
+        public static PropertyData[] GetSerializableProperties(this object obj, ToonNamingPolicy? toonNamingPolicy)
         {
             return obj.GetPublicProperties().Select(p => new PropertyData
             {
-                SerializedName = p.Name,
+                SerializedName = NamingPolicyUtils.NameProperty(p.Name, toonNamingPolicy),
                 PropertyInfo = p,
             }).ToArray();
         }

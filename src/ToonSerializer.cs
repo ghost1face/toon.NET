@@ -105,7 +105,7 @@ namespace Toon
             }
             else
             {
-                var propertyData = value.GetSerializableProperties();
+                var propertyData = value.GetSerializableProperties(settings.PropertyNamingPolicy);
                 if (propertyData == null || propertyData.Length == 0)
                     return;
 
@@ -196,7 +196,7 @@ namespace Toon
             {
                 // object type
                 // value is not null here because it is handled by IsJsonPrimitive
-                var nestedPropertyData = value!.GetSerializableProperties();
+                var nestedPropertyData = value!.GetSerializableProperties(settings.PropertyNamingPolicy);
                 if (nestedPropertyData == null || nestedPropertyData.Length == 0)
                 {
                     // empty object
@@ -262,7 +262,7 @@ namespace Toon
             // array of objects
             if (Utils.IsArrayOfObjects(enumerated))
             {
-                var header = DetectTabularHeader(enumerated);
+                var header = DetectTabularHeader(enumerated, settings);
                 if (header != null)
                 {
                     EncodeArrayOfObjectsAsTabular(key, enumerated, header, writer, depth, settings);
@@ -345,7 +345,7 @@ namespace Toon
 
         private static void EncodeObjectAsListItem(object obj, LineWriter writer, int depth, ToonSerializerSettings settings)
         {
-            var objectProperties = obj.GetSerializableProperties();
+            var objectProperties = obj.GetSerializableProperties(settings.PropertyNamingPolicy);
             if (objectProperties.Length == 0)
             {
                 writer.Push(Constants.ListItemMarker, depth);
@@ -379,7 +379,7 @@ namespace Toon
                     else if (Utils.IsArrayOfObjects(enumerableOfObjects))
                     {
                         // Check if array of objects can use tabular format
-                        var header = DetectTabularHeader(enumerableOfObjects);
+                        var header = DetectTabularHeader(enumerableOfObjects, settings);
                         if (header != null)
                         {
                             // Tabular format for uniform arrays of objects
@@ -440,7 +440,7 @@ namespace Toon
             {
                 // must be an object/poco type
                 // firstValue cannot be null here because IsJsonPrimitive handles nulls
-                var nestedPropertyData = firstValue!.GetSerializableProperties();
+                var nestedPropertyData = firstValue!.GetSerializableProperties(settings.PropertyNamingPolicy);
                 if (nestedPropertyData == null || nestedPropertyData.Length == 0)
                 {
                     writer.Push($"{Constants.ListItemPrefix}{encodedKey}:", depth);
@@ -505,7 +505,7 @@ namespace Toon
             {
                 if (propertyData == null)
                 {
-                    propertyData = row.GetSerializableProperties();
+                    propertyData = row.GetSerializableProperties(settings.PropertyNamingPolicy);
                 }
 
                 var values = propertyData.Select(p => row.GetValue(p.PropertyInfo.Name)).ToArray();
@@ -518,13 +518,13 @@ namespace Toon
             }
         }
 
-        private static string[]? DetectTabularHeader(object[]? rowsOfData)
+        private static string[]? DetectTabularHeader(object[]? rowsOfData, ToonSerializerSettings settings)
         {
             if (rowsOfData == null || rowsOfData.Length == 0)
                 return null;
 
             var firstRow = rowsOfData[0];
-            var firstProperties = firstRow.GetSerializableProperties();
+            var firstProperties = firstRow.GetSerializableProperties(settings.PropertyNamingPolicy);
             if (firstProperties == null || firstProperties.Length == 0)
                 return null;
 

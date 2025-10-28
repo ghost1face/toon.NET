@@ -1,0 +1,3 @@
+﻿users[2]{id,name,role,active}:
+  1,Alice,admin,null
+  2,Bob,user,null

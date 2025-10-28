@@ -1,15 +1,13 @@
 ﻿using System.Threading.Tasks;
 using Toon.Test.Models;
-using Toon.Test.Tools;
 using Xunit;
 
 namespace Toon.Test
 {
-
-    public partial class ToonSerializerTests : BaseVerifierTest
+    public partial class ToonSerializerTests
     {
         [Fact]
-        public void Serialize_UserDataSet_ReturnsExpectedTokens()
+        public async Task Serialize_UserDataSet_ReturnsExpectedTokens_CamelCase()
         {
             var users = new[]
             {
@@ -18,19 +16,21 @@ namespace Toon.Test
             };
             var dataSet = new UserDataSet { Users = users };
 
-            var serializer = new ToonSerializer();
+            var serializer = new ToonSerializer(new ToonSerializerSettings { PropertyNamingPolicy = ToonNamingPolicy.CamelCase });
             var result = serializer.Serialize(dataSet);
 
-            Assert.Contains("Alice", result);
-            Assert.Contains("Bob", result);
-            Assert.Contains("admin", result);
-            Assert.Contains("user", result);
+            var output = await BuildVerifier().Verify(result);
+
+            Assert.Contains("Alice", output.Text);
+            Assert.Contains("Bob", output.Text);
+            Assert.Contains("admin", output.Text);
+            Assert.Contains("user", output.Text);
         }
 
         [Fact]
-        public async Task SerializeSimple_Objects_WithPrimitive_Values()
+        public async Task SerializeSimple_Objects_WithPrimitive_Values_CamelCase()
         {
-            var serializer = new ToonSerializer();
+            var serializer = new ToonSerializer(new ToonSerializerSettings { PropertyNamingPolicy = ToonNamingPolicy.CamelCase });
 
             var user = new User
             {
@@ -45,9 +45,9 @@ namespace Toon.Test
         }
 
         [Fact]
-        public async Task SerializeNested_Objects_WithPrimitiveValues()
+        public async Task SerializeNested_Objects_WithPrimitiveValues_CamelCase()
         {
-            var serializer = new ToonSerializer();
+            var serializer = new ToonSerializer(new ToonSerializerSettings { PropertyNamingPolicy = ToonNamingPolicy.CamelCase });
 
             var data = new
             {
@@ -64,32 +64,15 @@ namespace Toon.Test
         }
 
         [Fact]
-        public async Task Serializes_WithArrayLength_InBrackets()
+        public async Task Serializes_ArrayOfObjects_Tabular_CamelCase()
         {
-            var serializer = new ToonSerializer();
-
-            var data = new
-            {
-                Tags = new[] { "admin", "ops", "dev" }
-            };
-
-            var output = serializer.Serialize(data);
-
-            var result = await BuildVerifier().Verify(output);
-
-            Assert.Contains("[3]", result.Text);
-        }
-
-        [Fact]
-        public async Task Serializes_ArrayOfObjects_Tabular()
-        {
-            var serializer = new ToonSerializer();
+            var serializer = new ToonSerializer(new ToonSerializerSettings { PropertyNamingPolicy = ToonNamingPolicy.CamelCase });
 
             var data = new
             {
                 Items = new[]
                 {
-                    new { SKU= "A1", Qty = 2, Price = 9.99 },
+                    new { SKU = "A1", Qty = 2, Price = 9.99 },
                     new { SKU = "B2", Qty = 1, Price = 14.5 }
                 }
             };
@@ -98,15 +81,15 @@ namespace Toon.Test
 
             var result = await BuildVerifier().Verify(output);
 
-            Assert.Contains("Items[2]{SKU,Qty,Price}:", result.Text);
+            Assert.Contains("items[2]{sku,qty,price}:", result.Text);
             Assert.Contains("A1,2,9.99", result.Text);
             Assert.Contains("B2,1,14.5", result.Text);
         }
 
         [Fact]
-        public async Task Serializes_NestedArraysWithTabularFormatting()
+        public async Task Serializes_NestedArraysWithTabularFormatting_CamelCase()
         {
-            var serializer = new ToonSerializer();
+            var serializer = new ToonSerializer(new ToonSerializerSettings { PropertyNamingPolicy = ToonNamingPolicy.CamelCase });
 
             var data = new
             {
@@ -128,11 +111,11 @@ namespace Toon.Test
 
             var result = await BuildVerifier().Verify(output);
 
-            Assert.Contains("Items[1]:", result.Text);
-            Assert.Contains("- Users[2]{Id,Name}:", result.Text);
+            Assert.Contains("items[1]:", result.Text);
+            Assert.Contains("- users[2]{id,name}:", result.Text);
             Assert.Contains("1,Ada", result.Text);
             Assert.Contains("2,Bob", result.Text);
-            Assert.Contains("Status: active", result.Text);
+            Assert.Contains("status: active", result.Text);
         }
     }
 }

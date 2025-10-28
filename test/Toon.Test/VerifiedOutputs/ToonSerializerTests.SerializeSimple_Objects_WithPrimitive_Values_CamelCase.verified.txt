@@ -1,0 +1,4 @@
+﻿id: 123
+name: Ada
+role: null
+active: true

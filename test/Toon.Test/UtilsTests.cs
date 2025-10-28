@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Toon.Test.Models;
-using Toon;
 using Xunit;
 
 namespace Toon.Test
