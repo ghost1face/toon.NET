@@ -1,6 +1,8 @@
-﻿namespace Toon.Extensions
+﻿using Toon.Extensions;
+
+namespace Toon.Utils
 {
-    internal static class NamingPolicyUtils
+    internal static class NamingPolicy
     {
         public static string NameProperty(string originalName, ToonNamingPolicy? toonNamingPolicy)
         {

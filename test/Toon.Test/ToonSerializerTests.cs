@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Toon.Test.Models;
 using Toon.Test.Tools;
 using Xunit;
@@ -133,6 +134,34 @@ namespace Toon.Test
             Assert.Contains("1,Ada", result.Text);
             Assert.Contains("2,Bob", result.Text);
             Assert.Contains("Status: active", result.Text);
+        }
+
+        [Fact]
+        public async Task Serializes_DateTime_ISOStandard()
+        {
+            var serializer = new ToonSerializer();
+            var dateTime1 = new DateTime(2025, 1, 24);
+            var dateTime2 = new DateTime(2026, 12, 29, 10, 22, 45);
+
+            var data = new
+            {
+                Items = new[]
+                {
+                    new
+                    {
+                        Users = new[]
+                        {
+                            new { Id = 1, Name = "Ada", Time = dateTime1 },
+                            new { Id = 2, Name = "Bob", Time = dateTime2 }
+                        },
+                        Status = "active"
+                    }
+                }
+            };
+
+            var output = serializer.Serialize(data);
+
+            await BuildVerifier().Verify(output);
         }
     }
 }

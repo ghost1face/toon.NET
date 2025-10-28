@@ -1,10 +1,11 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Toon
+namespace Toon.Utils
 {
-    internal static class Utils
+    internal static class Serialization
     {
         public static bool IsJsonPrimitive(object? value)
         {
@@ -21,7 +22,9 @@ namespace Toon
                 || value is float
                 || value is double
                 || value is decimal
-                || value is bool;
+                || value is bool
+                || value is DateTime
+                || value is DateTimeOffset;
         }
 
         public static bool IsArrayLike(object? value)

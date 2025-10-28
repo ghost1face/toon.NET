@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using Toon.Utils;
 
 namespace Toon.Extensions
 {
@@ -25,7 +26,7 @@ namespace Toon.Extensions
         {
             return obj.GetPublicProperties().Select(p => new PropertyData
             {
-                SerializedName = NamingPolicyUtils.NameProperty(p.Name, toonNamingPolicy),
+                SerializedName = NamingPolicy.NameProperty(p.Name, toonNamingPolicy),
                 PropertyInfo = p,
             }).ToArray();
         }

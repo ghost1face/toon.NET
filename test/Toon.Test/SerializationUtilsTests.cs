@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using Toon.Test.Models;
+using Toon.Utils;
 using Xunit;
 
 namespace Toon.Test
 {
-    public class UtilsTests
+    public class SerializationUtilsTests
     {
         public static IEnumerable<object[]> ComplexTypes
         {
@@ -61,7 +62,7 @@ namespace Toon.Test
         [InlineData(null)]
         public void IsJsonPrimitive_ReturnsTrue_ForPrimitives(object? value)
         {
-            var isPrimitive = Utils.IsJsonPrimitive(value);
+            var isPrimitive = Serialization.IsJsonPrimitive(value);
 
             Assert.True(isPrimitive);
         }
@@ -70,7 +71,7 @@ namespace Toon.Test
         [MemberData(nameof(ComplexTypes))]
         public void IsJsonPrimitive_ReturnsFalse_OnComplexTypes(object? value)
         {
-            var isPrimitive = Utils.IsJsonPrimitive(value);
+            var isPrimitive = Serialization.IsJsonPrimitive(value);
 
             Assert.False(isPrimitive);
         }
@@ -79,7 +80,7 @@ namespace Toon.Test
         [MemberData(nameof(ArrayLike))]
         public void IsArrayLike_ReturnsTrue_ForArraysAndLists(object? value)
         {
-            var arrayLike = Utils.IsArrayLike(value);
+            var arrayLike = Serialization.IsArrayLike(value);
 
             Assert.True(arrayLike);
         }
@@ -93,7 +94,7 @@ namespace Toon.Test
         [InlineData(-0)]
         public void IsArrayLike_ReturnsFalse_ForPrimitiveTypes(object? value)
         {
-            var arrayLike = Utils.IsArrayLike(value);
+            var arrayLike = Serialization.IsArrayLike(value);
 
             Assert.False(arrayLike);
         }
@@ -102,7 +103,7 @@ namespace Toon.Test
         [MemberData(nameof(ObjectTypes))]
         public void IsArrayLike_ReturnsFalse_ForObjectTypes(object? value)
         {
-            var arrayLike = Utils.IsArrayLike(value);
+            var arrayLike = Serialization.IsArrayLike(value);
 
             Assert.False(arrayLike);
         }
@@ -111,7 +112,7 @@ namespace Toon.Test
         [MemberData(nameof(DictionaryTypes))]
         public void IsDictionary_Identifies_Dictionary(object? value)
         {
-            var isDictionary = Utils.IsDictionary(value);
+            var isDictionary = Serialization.IsDictionary(value);
 
             Assert.True(isDictionary);
         }
@@ -121,7 +122,7 @@ namespace Toon.Test
         {
             var arr = new object?[] { 1, "a", true, (object?)null };
 
-            Assert.True(Utils.IsArrayOfPrimitives(arr));
+            Assert.True(Serialization.IsArrayOfPrimitives(arr));
         }
 
         [Fact]
@@ -129,25 +130,25 @@ namespace Toon.Test
         {
             var arr2 = new object[] { 1, new object() };
 
-            Assert.False(Utils.IsArrayOfPrimitives(arr2));
+            Assert.False(Serialization.IsArrayOfPrimitives(arr2));
         }
 
         [Fact]
         public void IsArrayOfArrays_Works()
         {
             var arr = new object[] { new int[] { 1 }, new int[] { 2 } };
-            Assert.True(Utils.IsArrayOfArrays(arr));
+            Assert.True(Serialization.IsArrayOfArrays(arr));
             var arr2 = new object[] { 1, new int[] { 2 } };
-            Assert.False(Utils.IsArrayOfArrays(arr2));
+            Assert.False(Serialization.IsArrayOfArrays(arr2));
         }
 
         [Fact]
         public void IsArrayOfObjects_Works()
         {
             var arr = new object[] { new User(), new User() };
-            Assert.True(Utils.IsArrayOfObjects(arr));
+            Assert.True(Serialization.IsArrayOfObjects(arr));
             var arr2 = new object[] { 1, new User() };
-            Assert.False(Utils.IsArrayOfObjects(arr2));
+            Assert.False(Serialization.IsArrayOfObjects(arr2));
         }
     }
 }

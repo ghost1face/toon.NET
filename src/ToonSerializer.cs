@@ -1,8 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Toon.Extensions;
+using Toon.Utils;
 
 namespace Toon
 {
@@ -18,7 +20,7 @@ namespace Toon
         private static readonly Regex containsControlCharacters = ContainsControlCharsRegex();
         private static readonly Regex isValidUnquotedKeyRegex = IsValidUnquotedKeyRegex();
 
-        [GeneratedRegex("^-?\\d+(\\.\\d+)?$")]
+        [GeneratedRegex("^-?\\d+(?:\\.\\d+)?(?:e[+-]?\\d+)?$|^0\\d+$", RegexOptions.IgnoreCase)]
         private static partial Regex IsNumericRegex();
 
         [GeneratedRegex("[[\\]{}]")]
@@ -29,8 +31,10 @@ namespace Toon
 
         [GeneratedRegex("^[A-Z_][\\w.]*$", RegexOptions.IgnoreCase, "en-US")]
         private static partial Regex IsValidUnquotedKeyRegex();
+
+        
 #else
-        private static readonly Regex isNumericRegex = new Regex("^-?\\d+(\\.\\d+)?$");
+        private static readonly Regex isNumericRegex = new Regex("^-?\\d+(?:\\.\\d+)?(?:e[+-]?\\d+)?$|^0\\d+$", RegexOptions.IgnoreCase);
         private static readonly Regex containsBracketsOrBraces = new Regex("[[\\]{}]");
         private static readonly Regex containsControlCharacters = new Regex("[\\n\\r\\t]");
         private static readonly Regex isValidUnquotedKeyRegex = new Regex("^[A-Z_][\\w.]*$", RegexOptions.IgnoreCase);
@@ -64,12 +68,12 @@ namespace Toon
         /// <returns>A string representation of the serialized object.</returns>
         public string Serialize(object value)
         {
-            if (Utils.IsJsonPrimitive(value))
+            if (Serialization.IsJsonPrimitive(value))
                 return EncodePrimitive(value, toonSerializerSettings.Delimiter);
 
             var writer = new LineWriter(toonSerializerSettings.Indent);
 
-            if (Utils.IsArrayLike(value))
+            if (Serialization.IsArrayLike(value))
             {
                 EncodeArray(null, value as IEnumerable, writer, 0, toonSerializerSettings);
             }
@@ -88,7 +92,7 @@ namespace Toon
             if (value == null)
                 return;
 
-            if (Utils.IsDictionary(value))
+            if (Serialization.IsDictionary(value))
             {
                 var dictionary = value as IDictionary;
 
@@ -124,7 +128,7 @@ namespace Toon
             var theKey = key;
             var theFields = fields;
             var delimiter = settings.Delimiter;
-            var lengthMarker = settings.LengthMarker == null ? settings.LengthMarker.ToString() : "";
+            var lengthMarker = settings.LengthMarker != null ? settings.LengthMarker.ToString() : "";
 
             var header = new StringBuilder();
 
@@ -176,18 +180,18 @@ namespace Toon
 
         private static string JoinEncodedValues(object?[] primitiveValues, char delimiter)
         {
-            return string.Join(",", primitiveValues.Select(v => EncodePrimitive(v, delimiter)));
+            return string.Join(delimiter, primitiveValues.Select(v => EncodePrimitive(v, delimiter)));
         }
 
         private static void EncodeKeyValuePair(string key, object? value, LineWriter writer, int depth, ToonSerializerSettings settings)
         {
             var encodedKey = EncodeKey(key);
 
-            if (Utils.IsJsonPrimitive(value))
+            if (Serialization.IsJsonPrimitive(value))
             {
                 writer.Push($"{encodedKey}: {EncodePrimitive(value, settings.Delimiter)}", depth);
             }
-            else if (Utils.IsArrayLike(value))
+            else if (Serialization.IsArrayLike(value))
             {
                 EncodeArray(key, value as IEnumerable, writer, depth, settings);
             }
@@ -229,7 +233,7 @@ namespace Toon
             }
 
             // primitive array
-            if (Utils.IsArrayOfPrimitives(enumerated))
+            if (Serialization.IsArrayOfPrimitives(enumerated))
             {
                 EncodeInlinePrimitiveArray(key, enumerated, writer, depth, settings);
 
@@ -237,7 +241,7 @@ namespace Toon
             }
 
             // array of arrays (all primitives)
-            if (Utils.IsArrayOfArrays(enumerated))
+            if (Serialization.IsArrayOfArrays(enumerated))
             {
                 var allPrimitiveArrays = enumerated.All(arr =>
                 {
@@ -248,7 +252,7 @@ namespace Toon
 
                     var castedArr = enumerableArr.Cast<object>().ToArray();
 
-                    return Utils.IsArrayOfPrimitives(castedArr);
+                    return Serialization.IsArrayOfPrimitives(castedArr);
                 });
 
                 if (allPrimitiveArrays)
@@ -260,7 +264,7 @@ namespace Toon
             }
 
             // array of objects
-            if (Utils.IsArrayOfObjects(enumerated))
+            if (Serialization.IsArrayOfObjects(enumerated))
             {
                 var header = DetectTabularHeader(enumerated, settings);
                 if (header != null)
@@ -294,13 +298,31 @@ namespace Toon
                     return Constants.NullLiteral;
                 case bool boolValue:
                     return boolValue ? Constants.TrueLilteral : Constants.FalseLilteral;
+                case DateTime dateTimeValue:
+                    // TODO: Make configurable in ToonSerializerSettings?
+                    var dateTimeString = DateTimeUtility.ToIsoString(dateTimeValue, DateTimeKind.Utc);
+
+                    return EncodeStringLiteral(dateTimeString, delimiter);
+                case DateTimeOffset dateTimeOffsetValue:
+                    var dateTimeOffsetString = DateTimeUtility.ToIsoString(dateTimeOffsetValue);
+
+                    return EncodeStringLiteral(dateTimeOffsetString, delimiter);
                 default:
                     {
                         var val = value.ToString();
 
                         if (value.IsNumber())
                         {
-                            return val!.ToString();
+                            return val switch
+                            {
+                                string s when int.TryParse(s, out int i) => i.ToString(),
+                                string s when long.TryParse(s, out long l) => l.ToString(),
+                                string s when decimal.TryParse(s, out decimal d) => NumericUtility.ConvertToString(d),
+                                string s when double.TryParse(s, out double dbl) => NumericUtility.ConvertToString(dbl, s),
+                                string s when float.TryParse(s, out float f) => NumericUtility.ConvertToString(f),
+                                _ => val!.ToString()
+                            }
+                    ;
                         }
 
                         return val != null ? EncodeStringLiteral(val, delimiter) : Constants.NullLiteral;
@@ -315,12 +337,12 @@ namespace Toon
 
             foreach (var value in values)
             {
-                if (Utils.IsJsonPrimitive(value))
+                if (Serialization.IsJsonPrimitive(value))
                 {
                     // direct primitive as list item
                     writer.Push($"{Constants.ListItemPrefix}{EncodePrimitive(value, settings.Delimiter)}", depth + 1);
                 }
-                else if (Utils.IsArrayLike(value))
+                else if (Serialization.IsArrayLike(value))
                 {
                     if (value is not IEnumerable enumerableValue)
                     {
@@ -328,7 +350,7 @@ namespace Toon
                     }
 
                     var enumerableOfObjects = enumerableValue.Cast<object>().ToArray();
-                    if (Utils.IsArrayOfPrimitives(enumerableOfObjects))
+                    if (Serialization.IsArrayOfPrimitives(enumerableOfObjects))
                     {
                         var inline = FormatInlineArray(enumerableOfObjects, null, settings);
 
@@ -359,24 +381,24 @@ namespace Toon
             var encodedKey = EncodeKey(firstKey);
             var firstValue = obj.GetValue(firstObjectProperties.PropertyInfo.Name);
 
-            if (Utils.IsJsonPrimitive(firstValue))
+            if (Serialization.IsJsonPrimitive(firstValue))
             {
                 writer.Push($"{Constants.ListItemPrefix}{encodedKey}: {EncodePrimitive(firstValue, settings.Delimiter)}", depth);
             }
-            else if (Utils.IsArrayLike(firstValue))
+            else if (Serialization.IsArrayLike(firstValue))
             {
                 var enumerableFirstValue = (firstValue as IEnumerable);
                 if (enumerableFirstValue != null)
                 {
                     var enumerableOfObjects = enumerableFirstValue.Cast<object>().ToArray();
 
-                    if (Utils.IsArrayOfPrimitives(enumerableOfObjects))
+                    if (Serialization.IsArrayOfPrimitives(enumerableOfObjects))
                     {
                         var formatted = FormatInlineArray(enumerableOfObjects, firstKey, settings);
 
                         writer.Push($"{Constants.ListItemPrefix}{formatted}", depth);
                     }
-                    else if (Utils.IsArrayOfObjects(enumerableOfObjects))
+                    else if (Serialization.IsArrayOfObjects(enumerableOfObjects))
                     {
                         // Check if array of objects can use tabular format
                         var header = DetectTabularHeader(enumerableOfObjects, settings);
@@ -400,7 +422,7 @@ namespace Toon
                             }
                         }
                     }
-                    else if (Utils.IsArrayOfArrays(enumerableOfObjects))
+                    else if (Serialization.IsArrayOfArrays(enumerableOfObjects))
                     {
                         // complex arrays on separate lines (array of arrays, etc.)
                         writer.Push($"{Constants.ListItemPrefix}{encodedKey}[{enumerableOfObjects.Length}]:", depth);
@@ -408,18 +430,18 @@ namespace Toon
                         // encode array contents at depth + 1
                         foreach (var item in enumerableOfObjects)
                         {
-                            if (Utils.IsJsonPrimitive(item))
+                            if (Serialization.IsJsonPrimitive(item))
                             {
                                 writer.Push($"{Constants.ListItemPrefix}{EncodePrimitive(item, settings.Delimiter)}", depth + 1);
                             }
-                            else if (Utils.IsArrayLike(item))
+                            else if (Serialization.IsArrayLike(item))
                             {
                                 var itemArrayLike = (item as IEnumerable);
                                 if (itemArrayLike != null)
                                 {
                                     var itemArrayLikeOfObjects = itemArrayLike.Cast<object>().ToArray();
 
-                                    if (Utils.IsArrayOfPrimitives(itemArrayLikeOfObjects))
+                                    if (Serialization.IsArrayOfPrimitives(itemArrayLikeOfObjects))
                                     {
                                         var inline = FormatInlineArray(itemArrayLikeOfObjects, null, settings);
 
@@ -480,7 +502,7 @@ namespace Toon
             {
                 var arrayOfPossiblePrimitives = ((IEnumerable)arr).Cast<object>().ToArray();
 
-                if (Utils.IsArrayOfPrimitives(arrayOfPossiblePrimitives))
+                if (Serialization.IsArrayOfPrimitives(arrayOfPossiblePrimitives))
                 {
                     var inline = FormatInlineArray(arrayOfPossiblePrimitives, null, settings);
 
@@ -554,7 +576,7 @@ namespace Toon
                         return false;
 
                     var propertyValue = row.GetValue(propertyKey);
-                    if (!Utils.IsJsonPrimitive(propertyValue))
+                    if (!Serialization.IsJsonPrimitive(propertyValue))
                         return false;
 
                 }
@@ -579,6 +601,9 @@ namespace Toon
 
         private static bool IsSafeUnquoted(string value, char delimiter)
         {
+            if (string.IsNullOrEmpty(value))
+                return false;
+
             if (IsPaddedWithWhitespace(value))
                 return false;
 
@@ -631,11 +656,13 @@ namespace Toon
         private static string EscapeString(string value)
         {
             return value
-                .Replace("\\", $"{Constants.BackSlash}${Constants.BackSlash}")
-                .Replace("\"", $"{Constants.BackSlash}${Constants.DoubleQuote}")
+                .Replace("\\", $"{Constants.BackSlash}{Constants.BackSlash}")
+                .Replace("\"", $"{Constants.BackSlash}{Constants.DoubleQuote}")
                 .Replace("\n", $"{Constants.BackSlash}n")
                 .Replace("\r", $"{Constants.BackSlash}r")
                 .Replace("\t", $"{Constants.BackSlash}t");
         }
+
+
     }
 }

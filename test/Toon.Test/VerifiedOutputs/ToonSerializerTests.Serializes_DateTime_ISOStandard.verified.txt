@@ -1,0 +1,5 @@
+﻿Items[1]:
+  - Users[2]{Id,Name,Time}:
+    1,Ada,"2025-01-24T00:00:00Z"
+    2,Bob,"2026-12-29T10:22:45Z"
+    Status: active
