@@ -9,6 +9,34 @@ TOON's sweet spot is **uniform arrays of objects** – multiple fields per row, 
 > [!TIP]
 > Think of TOON as a translation layer: use JSON programmatically, convert to TOON for LLM input.
 
+## Usage
+
+```cs
+var serializer = new ToonSerializer();
+
+var data = new {
+  user = new {
+    id = 123,
+    name = "Ada",
+    tags = new[] { "reading", "gaming" },
+    active = true,
+    preferences = new[] { }
+  }
+}
+
+var dataString = serializer.Serialize(data);
+
+Console.WriteLine(dataString);
+
+//// example output:
+// user:
+//   id: 123
+//   name: Ada
+//   tags[2]: reading,gaming
+//   active: true
+//   preferences[0]:
+```
+
 ## Why TOON?
 
 AI is becoming cheaper and more accessible, but larger context windows allow for larger data inputs as well. **LLM tokens still cost money** – and standard JSON is verbose and token-expensive:
