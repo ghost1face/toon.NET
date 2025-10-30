@@ -58,13 +58,6 @@ users[2]{id,name,role}:
   2,Bob,user
 ```
 
-<details>
-<summary>Another reason</summary>
-
-[![xkcd: Standards](https://imgs.xkcd.com/comics/standards_2x.png)](https://xkcd.com/927/)
-
-</details>
-
 ## Key Features
 
 - 💸 **Token-efficient:** typically 30–60% fewer tokens than JSON
