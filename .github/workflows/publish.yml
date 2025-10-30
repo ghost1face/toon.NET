@@ -1,0 +1,32 @@
+name: publish
+
+on:
+  release:
+    types: [ "created" ]
+
+jobs:
+  deploy:
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - name: Build
+        working-directory: ./src
+        run: dotnet build --configuration Release .
+      - name: Create the package
+        working-directory: ./src
+        run: dotnet pack --configuration Release .
+      - name: Publish the package to nuget.org
+        working-directory: ./src
+        run: dotnet nuget push src/bin/Release/Toon.*.nupkg -k $NUGET_AUTH_TOKEN -s https://api.nuget.org/v3/index.json
+        env:
+          NUGET_AUTH_TOKEN: ${{secrets.NUGET_TOKEN}}
